@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Void. Do Nothing. Stay Quiet. Just Be Here.</title>
+  <style>
+:root {
+  --serif-font: Constantia, 'Lucida Bright', Lucidabright, 'Lucida Serif', Lucida, 'DejaVu Serif', 'Bitstream Vera Serif', 'Liberation Serif', Georgia, serif;
+  --mono-font: 'SF Mono', 'JetBrains Mono', 'Fira Mono', 'Menlo', 'Consolas', 'Liberation Mono', 'Roboto Mono', 'Courier New', monospace;
+  --dark-bg: oklch(20% 0 0);                 /* pure grayscale near black */
+  --text-primary: oklch(92% 0 0);            /* light gray */
+  --text-subtle: oklch(60% 0 0);             /* mid-gray */
+  --btn-bg: oklch(27% 0 0);                  /* dark gray */
+  --btn-hover: oklch(38% 0 0);               /* lighter on hover */
+  --btn-disabled: oklch(16% 0 0);            /* more muted, darker gray */
+  --accent: oklch(81% 0 0);                  /* soft light gray/accent */
+  --border-soft: oklch(40% 0 0);             /* soft border gray */
+  --overlay-dark: oklch(15% 0 0 / 0.48);     /* More transparent, grayscale overlay */
+  --shadow: 0 4px 24px oklch(0% 0 0 / 0.32), 0 1.5px 6px oklch(0% 0 0 / 0.18);
+}
+
+/* Layout */
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--dark-bg);
+  color: var(--text-primary);
+  font-family: var(--serif-font);
+  font-size: 18px;
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.7s;
+}
+
+.void-container {
+  max-width: 1200px;
+  width: 95vw;
+  margin: auto;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 36px 18px 38px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 90vh;
+  justify-content: center;
+  z-index: 1;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.void-title {
+  font-family: var(--serif-font);
+  font-size: 7rem;
+  letter-spacing: 0.06em;
+  margin: 0 0 0.25em 0;
+  color: var(--text-primary);
+  font-weight: 700;
+  line-height: 1.05;
+  text-shadow: 0 3px 30px oklch(0 0 0 / 0.4);
+  transition: color 0.45s;
+}
+
+.void-subtitle {
+  font-family: var(--serif-font);
+  color: var(--text-subtle);
+  font-size: 3rem;
+  letter-spacing: 0.01em;
+  margin: 0 0 0.7em 0;
+  line-height: 1.11;
+  text-shadow: 0 2px 18px oklch(0 0 0 / 0.29);
+  transition: color 0.45s;
+}
+
+/* Timer/Buttons */
+
+.timer-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 0.8em;
+  margin-top: 0.1em;
+}
+
+.timer-btn {
+  font-family: var(--serif-font);
+  font-size: 1.12rem;
+  font-weight: 700;
+  padding: 0.28em 1.2em;
+  border: none;
+  outline: none;
+  border-radius: 7px;
+  color: var(--text-primary);
+  background: var(--btn-bg);
+  letter-spacing: 0.02em;
+  box-shadow: 0 2.5px 14px 1px oklch(0 0 0 / 0.17), 0 1px 2px 0 oklch(0 0 0 / 0.06);
+  transition: box-shadow .17s, background .15s, border .12s, color .2s;
+  cursor: pointer;
+  margin: 0 1.5px;
+  min-width: 78px;
+  min-height: 38px;
+}
+
+.timer-btn:disabled {
+  background: var(--btn-disabled);
+  color: oklch(46% 0.02 240);
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.timer-btn:not(:disabled):hover {
+  background: var(--btn-hover);
+  color: var(--accent);
+  box-shadow: 0 6px 30px 2px oklch(0 0 0 / 0.24);
+}
+
+
+
+.void-bg-active {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--dark-bg);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  transition: background 0.7s;
+  /* By default, fully hidden; shown only in timer mode */
+  display: none;
+}
+
+.void-bg-active.active {
+  display: block;
+}
+
+.void-counter-overlay {
+  position: fixed;
+  z-index: 100;
+  left: 0;
+  right: 0;
+  bottom: 1rem;
+  width: 100vw;
+  height: auto;
+  min-height: 0;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 0;
+  text-align: center;
+  gap: 0.35em;
+  opacity: 0;
+  transition: opacity 0.9s cubic-bezier(.54,0,.34,1);
+}
+
+.void-counter-overlay #void-mm,
+.void-counter-overlay #void-ss {
+  font-size: 30vw !important;
+  line-height: 1;
+  font-family: var(--mono-font), monospace;
+  color: oklch(88% 0 0) !important;
+  text-shadow:
+    0 2px 8px oklch(20% 0 0 / 0.28),
+    0 1px 1.5px oklch(20% 0 0 / 0.18);
+  display: inline-block;
+  vertical-align: middle;
+  opacity: 1;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.32s, opacity 0.45s cubic-bezier(.55,.01,.44,1.01);
+}
+
+.void-counter-overlay .colon-separator {
+  font-size: 30vw !important;
+  line-height: 1;
+  margin: 0 2vw;
+  display: inline-block;
+  vertical-align: middle;
+  color: oklch(88% 0 0) !important;
+  font-family: var(--mono-font) !important;
+  text-shadow:
+    0 2px 8px oklch(20% 0 0 / 0.28),
+    0 1px 1.5px oklch(20% 0 0 / 0.18);
+  opacity: 1 !important;
+  transition: color 0.3s, opacity 0.43s cubic-bezier(.51,.11,.4,.96);
+}
+
+.void-counter-overlay #void-mm,
+.void-counter-overlay #void-ss,
+.void-counter-overlay .colon-separator {
+  color: #fff !important;
+  background: transparent !important;
+  text-shadow:
+    0 2px 18px #000,
+    0 0px 3px #000,
+    0 0px 1px #000;
+  opacity: 1 !important;
+}
+
+.void-counter-overlay.active {
+  opacity: 1;
+}
+
+.void-counter-overlay .colon-separator {
+  font-size: 7.2rem !important;
+  margin: 0 16px;
+  display: inline-block;
+  vertical-align: middle;
+  font-family: var(--mono-font) !important;
+  transition: color 0.3s, opacity 0.43s cubic-bezier(.51,.11,.4,.96);
+}
+
+.void-counter-overlay #void-mm,
+.void-counter-overlay #void-ss {
+  font-size: 6.2rem !important;
+  font-family: var(--mono-font), monospace;
+  display: inline-block;
+  vertical-align: middle;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.32s, opacity 0.45s cubic-bezier(.55,.01,.44,1.01);
+}
+
+
+
+.void-counter-overlay.done {
+  cursor: pointer;
+  background: oklch(12% 0 0 / 0.67);
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  transition: background 0.4s;
+}
+.void-done-message {
+  font-family: var(--mono-font), monospace;
+  color: oklch(82% 0 0);
+  font-size: 2.6rem;
+  text-align: center;
+  letter-spacing: 0.018em;
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  cursor: pointer;
+  padding: 0.8em 2.2em;
+  border-radius: 18px;
+  user-select: none;
+  opacity: 1;
+}
+.void-done-message:active {
+  background: oklch(25% 0 0 / 0.52);
+}
+
+@media (max-width: 600px) {
+  .void-title { font-size: 2.6rem; }
+  .void-subtitle { font-size: 1.15rem; }
+  .void-container { padding: 10px 0px; }
+  .flip-card { width: 52px; height: 62px; font-size: 1.7rem;}
+  .timer-btn { font-size: 0.93rem; padding: 0.24em 0.88em; min-width: 50px; min-height: 30px;}
+  .reset-btn { font-size: 1.02rem; padding: 0.6em 1.4em; }
+}
+
+@media (max-width: 420px) {
+  .flip-card { width: 30px; height: 28px; font-size: 0.85rem;}
+  .void-title { font-size: 0.96rem;}
+}
+  </style>
+</head>
+<body>
+  <div id="void-bg" class="void-bg-active"></div>
+
+  <main class="void-container">
+    <header>
+      <h1 class="void-title">Void</h1>
+      <p class="void-subtitle">Do Nothing. Stay Quiet. Just Be Here.</p>
+    </header>
+
+    <div id="timer-buttons" class="timer-buttons">
+      <button class="timer-btn" data-min="1">1 Min</button>
+      <button class="timer-btn" data-min="5">5 Mins</button>
+      <button class="timer-btn" data-min="7">7 Mins</button>
+      <button class="timer-btn" data-min="13">13 Mins</button>
+      <button class="timer-btn" data-min="21">21 Mins</button>
+    </div>
+  </main>
+
+  <div id="void-counter" class="void-counter-overlay" style="display:none;">
+    <!-- Counter will be injected here by JS in timer mode -->
+  </div>
+
+  <script>
+const timerButtons = document.getElementById('timer-buttons');
+const voidBg = document.getElementById('void-bg');
+const voidCounter = document.getElementById('void-counter');
+const voidContainer = document.querySelector('.void-container');
+
+let timer = null, timeout = null, duration = 0, remaining = 0;
+
+function showOverlay(seconds, imgUrl) {
+  voidBg.style.backgroundImage = `url('${imgUrl}')`;
+  voidBg.classList.add("active");
+  voidCounter.classList.add("active");
+  voidCounter.style.display = "flex";
+  renderCounter(seconds);
+  voidContainer.style.display = "none";
+}
+
+function hideOverlay() {
+  voidBg.classList.remove("active");
+  voidCounter.classList.remove("active", "done");
+  voidCounter.style.display = "none";
+  voidBg.style.backgroundImage = "";
+  voidCounter.innerHTML = "";
+  voidCounter.onclick = null;
+  voidContainer.style.display = "";
+}
+
+function renderCounter(seconds) {
+  const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+  const ss = String(seconds % 60).padStart(2, '0');
+  voidCounter.innerHTML = `
+    <span id="void-mm">${mm}</span>
+    <span class="colon-separator">:</span>
+    <span id="void-ss">${ss}</span>
+  `;
+}
+function updateCounter(seconds) {
+  const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+  const ss = String(seconds % 60).padStart(2, '0');
+  const mmEl = document.getElementById("void-mm");
+  const ssEl = document.getElementById("void-ss");
+  if (mmEl && mmEl.textContent !== mm) {
+    mmEl.style.opacity = 0.3;
+    setTimeout(() => {
+      mmEl.textContent = mm;
+      mmEl.style.opacity = 1;
+    }, 110);
+  }
+  if (ssEl && ssEl.textContent !== ss) {
+    ssEl.style.opacity = 0.3;
+    setTimeout(() => {
+      ssEl.textContent = ss;
+      ssEl.style.opacity = 1;
+    }, 110);
+  }
+}
+
+function pickImageUrl() {
+  const num = Math.floor(Math.random() * 9) + 1;
+  return `images/${num}.jpg`;
+}
+
+function resetAll() {
+  if (timer) clearInterval(timer);
+  if (timeout) clearTimeout(timeout);
+  timer = null; timeout = null;
+  duration = remaining = 0;
+  hideOverlay();
+  timerButtons.style.display = 'flex';
+  [...timerButtons.querySelectorAll('button')].forEach(btn => btn.disabled = false);
+}
+
+function startTimer(minutes) {
+  duration = remaining = minutes * 60;
+  timerButtons.style.display = 'none';
+  [...timerButtons.querySelectorAll('button')].forEach(btn => btn.disabled = true);
+  showOverlay(remaining, pickImageUrl());
+  timer = setInterval(() => {
+    remaining--;
+    updateCounter(remaining);
+    if (remaining <= 0) {
+      clearInterval(timer);
+      timer = null;
+      setTimeout(showDoneOverlay, 500);
+    }
+  }, 1000);
+}
+
+function showDoneOverlay() {
+  try {
+    const okAudio = new Audio('ok.mp3');
+    okAudio.play();
+  } catch (e) {}
+  voidCounter.classList.add("done");
+  voidCounter.innerHTML = `<button class=\"void-done-message\" id=\"voidDoneBtn\" tabindex=\"0\">OK</button>`;
+  voidCounter.style.display = "flex";
+  timeout = setTimeout(() => window.location.reload(), 15000);
+  voidCounter.onclick = () => { clearTimeout(timeout); window.location.reload(); };
+  const btn = document.getElementById('voidDoneBtn');
+  if (btn) {
+    btn.onclick = e => { e.stopPropagation(); clearTimeout(timeout); window.location.reload(); };
+    btn.onkeyup = e => { if (e.key === "Enter" || e.key === " ") { clearTimeout(timeout); window.location.reload(); }};
+    btn.focus();
+  }
+}
+
+timerButtons.addEventListener('click', e => {
+  const btn = e.target.closest('.timer-btn');
+  if (!btn || btn.disabled) return;
+  const min = parseInt(btn.dataset.min, 10); if (!min) return;
+  startTimer(min);
+});
+
+document.addEventListener('keyup', e => {
+  if (e.key === "Escape" && timer) resetAll();
+});
+
+const resetBtn = document.getElementById('reset-btn');
+if (resetBtn) resetBtn.onclick = resetAll;
+
+resetAll();
+  </script>
+</body>
+</html>
