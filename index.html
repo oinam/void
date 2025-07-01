@@ -139,10 +139,13 @@ header {
   transition: background 0.7s;
   /* By default, fully hidden; shown only in timer mode */
   display: none;
+  opacity: 0;
+  transition: opacity 5s cubic-bezier(.4,0,.2,1);
 }
 
 .void-bg-active.active {
   display: block;
+  opacity: 1;
 }
 
 .void-counter-overlay {
@@ -312,8 +315,21 @@ const voidContainer = document.querySelector('.void-container');
 let timer = null, timeout = null, duration = 0, remaining = 0;
 
 function showOverlay(seconds, imgUrl) {
-  voidBg.style.backgroundImage = `url('${imgUrl}')`;
+  // Fade in background image over 5 seconds when a new timer starts
+  voidBg.style.transition = 'none';
+  voidBg.style.opacity = 0;
+  voidBg.style.backgroundImage = '';
   voidBg.classList.add("active");
+  // Preload the image, then fade in
+  const img = new window.Image();
+  img.onload = function() {
+    voidBg.style.backgroundImage = `url('${imgUrl}')`;
+    // Force reflow to apply transition
+    voidBg.offsetHeight;
+    voidBg.style.transition = 'opacity 5s cubic-bezier(.4,0,.2,1)';
+    voidBg.style.opacity = 1;
+  };
+  img.src = imgUrl;
   voidCounter.classList.add("active");
   voidCounter.style.display = "flex";
   renderCounter(seconds);
@@ -376,6 +392,14 @@ function resetAll() {
 }
 
 function startTimer(minutes) {
+  // Request fullscreen when timer starts (remove this block if you don't want fullscreen)
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen();
+  } else if (document.documentElement.webkitRequestFullscreen) { // Safari
+    document.documentElement.webkitRequestFullscreen();
+  } else if (document.documentElement.msRequestFullscreen) { // IE11
+    document.documentElement.msRequestFullscreen();
+  }
   duration = remaining = minutes * 60;
   timerButtons.style.display = 'none';
   [...timerButtons.querySelectorAll('button')].forEach(btn => btn.disabled = true);
